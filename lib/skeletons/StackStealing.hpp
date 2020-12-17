@@ -56,12 +56,8 @@ struct StackStealing {
     hpx::cout << "Decision: " << std::boolalpha << isDecision << "\n";
     hpx::cout << "DepthBounded: " << std::boolalpha << isDepthBounded << "\n";
     hpx::cout << "MaxStackDepth: " << maxStackDepth << "\n";
-    if constexpr(!std::is_same<boundFn, nullFn__>::value) {
         hpx::cout << "Using Bounding: true\n";
         hpx::cout << "PruneLevel Optimisation: " << std::boolalpha << pruneLevel << "\n";
-    } else {
-      hpx::cout << "Using Bounding: false\n";
-    }
     hpx::cout << "Chunking Enabled: " << std::boolalpha << params.stealAll << "\n";
     hpx::cout << hpx::flush;
   }
@@ -76,10 +72,6 @@ struct StackStealing {
     StackElem<Generator> rootElem(reg->space, initNode);
 
     GeneratorStack<Generator> generatorStack(maxStackDepth, rootElem);
-
-    if constexpr(isEnumeration) {
-        acc.accumulate(initNode);
-    }
 
     // Register with the Policy to allow stealing from this stack
     std::shared_ptr<SharedState> stealReq;
@@ -139,12 +131,6 @@ struct StackStealing {
     }
 
     while (stackDepth >= 0) {
-
-      if constexpr(isDecision) {
-        if (reg->stopSearch) {
-          return;
-        }
-      }
 
       // Handle steals first
       if (std::get<0>(*stealRequest)) {
@@ -220,15 +206,6 @@ struct StackStealing {
         stackDepth++;
         depth++;
 
-        if constexpr(isDepthBounded) {
-            // This doesn't look quite right to me, we want the next element at this level not the previous?
-            if (depth == reg->params.maxDepth) {
-              stackDepth--;
-              depth--;
-              continue;
-          }
-        }
-
         generatorStack[stackDepth].seen = 0;
         generatorStack[stackDepth].gen = childGen;
       } else {
@@ -252,11 +229,6 @@ struct StackStealing {
     std::vector<hpx::future<void> > futures;
 
     runWithStack(startingDepth, space, generatorStack, stealRequest, acc, futures, stackDepth, depth);
-
-    // Atomically updates the (process) local counter
-    if constexpr(isEnumeration) {
-        reg->updateEnumerator(acc);
-    }
 
     std::static_pointer_cast<Policy>(Workstealing::Scheduler::local_policy)->unregisterThread(searchManagerId);
 
@@ -397,21 +369,16 @@ struct StackStealing {
   static auto search (const Space & space,
                       const Node & root,
                       const API::Params<Bound> params = API::Params<Bound>()) {
-    if constexpr(verbose) {
       printSkeletonDetails(params);
-    }
 
     hpx::wait_all(hpx::lcos::broadcast<InitRegistryAct<Space, Node, Bound, Enum> >(
         hpx::find_all_localities(), space, root, params));
 
     Policy::initPolicy();
-
-    if constexpr(isOptimisation || isDecision) {
       auto inc = hpx::new_<Incumbent>(hpx::find_here()).get();
       hpx::wait_all(hpx::lcos::broadcast<UpdateGlobalIncumbentAct<Space, Node, Bound, Enum> >(
           hpx::find_all_localities(), inc));
       initIncumbent<Space, Node, Bound, Enum, Objcmp, Verbose>(root, params.initialBound);
-    }
 
     doSearch(space, root, params);
 
@@ -428,16 +395,10 @@ struct StackStealing {
     }
 
     // Return the right thing
-    if constexpr(isEnumeration) {
-      return combineEnumerators<Space, Node, Bound, Enum>();
-    } else if constexpr(isOptimisation || isDecision) {
       auto reg = Registry<Space, Node, Bound, Enum>::gReg;
 
       typedef typename Incumbent::GetIncumbentAct<Node, Bound, Objcmp, Verbose> getInc;
       return hpx::async<getInc>(reg->globalIncumbent).get();
-    } else {
-      static_assert(isEnumeration || isOptimisation || isDecision, "Please provide a supported search type: Enumeration, Optimisation, Decision");
-    }
   }
 };
 

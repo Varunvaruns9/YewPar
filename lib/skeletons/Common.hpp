@@ -82,45 +82,14 @@ struct ProcessNode {
                                     const Node & c,
                                     Enumerator & acc) {
 
-    if constexpr(isEnumeration) {
-        acc.accumulate(c);
-        return ProcessNodeRet::Continue;
-    }
-
-    if constexpr(isDecision) {
-        if (c.getObj() == params.expectedObjective) {
-          updateIncumbent<Space, Node, Bound, Enumerator, Objcmp, Verbose>(c, c.getObj());
-          hpx::lcos::broadcast<SetStopFlagAct<Space, Node, Bound, Enumerator> >(hpx::find_all_localities());
-          return ProcessNodeRet::Exit;
-        }
-      }
-
-    if constexpr(!std::is_same<boundFn, nullFn__>::value) {
         Objcmp cmp;
         auto bnd  = boundFn::invoke(space, c);
-        if constexpr(isDecision) {
-            if (!cmp(bnd, params.expectedObjective) && bnd != params.expectedObjective) {
-              if constexpr(pruneLevel) {
-                  return ProcessNodeRet::Break;
-                } else {
-                return ProcessNodeRet::Prune;
-              }
-            }
-            // B&B Case
-          } else {
           auto reg = Registry<Space, Node, Bound, Enumerator>::gReg;
           auto best = reg->localBound.load();
           if (!cmp(bnd, best)) {
-            if constexpr(pruneLevel) {
                 return ProcessNodeRet::Break;
-            } else {
-              return ProcessNodeRet::Prune;
-            }
           }
-        }
-      }
 
-    if constexpr(isOptimisation) {
         auto reg = Registry<Space, Node, Bound, Enumerator>::gReg;
         auto best = reg->localBound.load();
 
@@ -128,7 +97,6 @@ struct ProcessNode {
         if (cmp(c.getObj(),best)) {
           updateIncumbent<Space, Node, Bound, Enumerator, Objcmp, Verbose>(c, c.getObj());
         }
-    }
     return ProcessNodeRet::Continue;
   }
 };
