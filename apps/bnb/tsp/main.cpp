@@ -10,10 +10,6 @@
 #include "parser.hpp"
 #include "YewPar.hpp"
 
-#include "skeletons/Seq.hpp"
-#include "skeletons/DepthBounded.hpp"
-#include "skeletons/Ordered.hpp"
-#include "skeletons/Budget.hpp"
 #include "skeletons/StackStealing.hpp"
 
 #define MAX_CITIES  64
@@ -243,54 +239,12 @@ int hpx_main(boost::program_options::variables_map & opts) {
   YewPar::Skeletons::API::Params<unsigned> searchParameters;
   searchParameters.initialBound = greedyNN(distances, allCities, 1);
 
-  if (skeletonType == "seq") {
-
-    sol = YewPar::Skeletons::Seq<NodeGen,
-                                 YewPar::Skeletons::API::Optimisation,
-                                 YewPar::Skeletons::API::BoundFunction<upperBound_func>,
-                                 YewPar::Skeletons::API::ObjectiveComparison<std::less<unsigned>>>
-        ::search(space, root, searchParameters);
-  } else if (skeletonType == "depthbounded") {
-    searchParameters.spawnDepth = spawnDepth;
-    sol = YewPar::Skeletons::DepthBounded<NodeGen,
+  searchParameters.stealAll = static_cast<bool>(opts.count("chunked"));
+  sol = YewPar::Skeletons::StackStealing<NodeGen,
                                          YewPar::Skeletons::API::Optimisation,
                                          YewPar::Skeletons::API::BoundFunction<upperBound_func>,
                                          YewPar::Skeletons::API::ObjectiveComparison<std::less<unsigned>>>
-               ::search(space, root, searchParameters);
-  } else if (skeletonType == "ordered") {
-    searchParameters.spawnDepth = spawnDepth;
-    if (opts.count("discrepancyOrder")) {
-      sol = YewPar::Skeletons::Ordered<NodeGen,
-                                      YewPar::Skeletons::API::Optimisation,
-                                      YewPar::Skeletons::API::DiscrepancySearch,
-                                      YewPar::Skeletons::API::BoundFunction<upperBound_func>,
-                                      YewPar::Skeletons::API::ObjectiveComparison<std::less<unsigned>>>
-                ::search(space, root, searchParameters);
-    } else {
-      sol = YewPar::Skeletons::Ordered<NodeGen,
-                                      YewPar::Skeletons::API::Optimisation,
-                                      YewPar::Skeletons::API::BoundFunction<upperBound_func>,
-                                      YewPar::Skeletons::API::ObjectiveComparison<std::less<unsigned>>>
-                ::search(space, root, searchParameters);
-    }
-  } else if (skeletonType == "budget") {
-    searchParameters.backtrackBudget = opts["backtrack-budget"].as<unsigned>();
-    sol = YewPar::Skeletons::Budget<NodeGen,
-                                    YewPar::Skeletons::API::Optimisation,
-                                    YewPar::Skeletons::API::BoundFunction<upperBound_func>,
-                                    YewPar::Skeletons::API::ObjectiveComparison<std::less<unsigned>>>
-        ::search(space, root, searchParameters);
-  } else if (skeletonType == "stacksteal") {
-    searchParameters.stealAll = static_cast<bool>(opts.count("chunked"));
-    sol = YewPar::Skeletons::StackStealing<NodeGen,
-                                           YewPar::Skeletons::API::Optimisation,
-                                           YewPar::Skeletons::API::BoundFunction<upperBound_func>,
-                                           YewPar::Skeletons::API::ObjectiveComparison<std::less<unsigned>>>
-        ::search(space, root, searchParameters);
-  } else {
-    hpx::cout << "Invalid skeleton type\n";
-    return hpx::finalize();
-  }
+      ::search(space, root, searchParameters);
 
   auto overall_time = std::chrono::duration_cast<std::chrono::milliseconds>
                       (std::chrono::steady_clock::now() - start_time);

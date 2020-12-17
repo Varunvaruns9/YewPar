@@ -56,7 +56,7 @@ struct Incumbent : public hpx::components::locking_hook<
       if (cmp(incumbent.getObj(), incumbentNode.getObj())) {
         incumbentNode = incumbent;
         bnd = incumbent.getObj();
-        if constexpr(verbose >= 1) {
+        if (verbose >= 1) {
           hpx::cout << (boost::format("New Incumbent Bound: %1%\n") % incumbentNode.getObj()) << hpx::flush;
         }
       }
