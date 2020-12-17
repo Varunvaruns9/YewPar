@@ -104,7 +104,7 @@ struct StackStealing {
                                              YewPar::Skeletons::API::BoundFunction<boundFn>,
                                              YewPar::Skeletons::API::ObjectiveComparison<Objcmp>,
                                              YewPar::Skeletons::API::DepthLimited>
-                      ::search(space, root, localParams);
+                      ::findsearch(space, root, localParams);
       if (numNodes[depthRequired] >= totalThreads) {
         break;
       }

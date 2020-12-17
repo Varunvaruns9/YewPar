@@ -90,6 +90,21 @@ struct Seq {
 
       return std::get<0>(incumbent);
   }
+
+  static auto findsearch (const Space & space,
+                      const Node & root,
+                      const API::Params<Bound> params = API::Params<Bound>()) {
+    static_assert(isEnumeration || isBnB || isDecision, "Please provide a supported search type: Enumeration, BnB, Decision");
+
+      printSkeletonDetails();
+
+    Enumerator acc;
+
+    std::pair<Node, Bound> incumbent = std::make_pair(root, params.initialBound);
+    expand(space, root, params, incumbent, 1, acc);
+
+      return acc.get();
+  }
 };
 
 
