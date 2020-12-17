@@ -62,12 +62,14 @@ struct Seq {
                   break;
             }
 
+      if (1) {
         Objcmp cmp;
         if (cmp(c.getObj(), std::get<1>(incumbent))) {
           std::get<0>(incumbent) = c;
           std::get<1>(incumbent) = c.getObj();
             hpx::cout << (boost::format("New Incumbent: %1%\n") % c.getObj()) << hpx::flush;
         }
+      }
 
       auto found = expand(space, c, params, incumbent, childDepth + 1, acc);
     }

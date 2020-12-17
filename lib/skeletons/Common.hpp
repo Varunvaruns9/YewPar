@@ -90,6 +90,7 @@ struct ProcessNode {
                 return ProcessNodeRet::Break;
           }
 
+      if (1) {
         auto reg = Registry<Space, Node, Bound, Enumerator>::gReg;
         auto best = reg->localBound.load();
 
@@ -97,6 +98,7 @@ struct ProcessNode {
         if (cmp(c.getObj(),best)) {
           updateIncumbent<Space, Node, Bound, Enumerator, Objcmp, Verbose>(c, c.getObj());
         }
+      }
     return ProcessNodeRet::Continue;
   }
 };
