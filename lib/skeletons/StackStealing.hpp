@@ -375,10 +375,13 @@ struct StackStealing {
         hpx::find_all_localities(), space, root, params));
 
     Policy::initPolicy();
+
+    if (1) {
       auto inc = hpx::new_<Incumbent>(hpx::find_here()).get();
       hpx::wait_all(hpx::lcos::broadcast<UpdateGlobalIncumbentAct<Space, Node, Bound, Enum> >(
           hpx::find_all_localities(), inc));
       initIncumbent<Space, Node, Bound, Enum, Objcmp, Verbose>(root, params.initialBound);
+    }
 
     doSearch(space, root, params);
 
@@ -395,10 +398,12 @@ struct StackStealing {
     }
 
     // Return the right thing
+    if (1) {
       auto reg = Registry<Space, Node, Bound, Enum>::gReg;
 
       typedef typename Incumbent::GetIncumbentAct<Node, Bound, Objcmp, Verbose> getInc;
       return hpx::async<getInc>(reg->globalIncumbent).get();
+    }
   }
 };
 

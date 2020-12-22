@@ -81,14 +81,17 @@ struct ProcessNode {
                                     const Space & space,
                                     const Node & c,
                                     Enumerator & acc) {
-
+      if (1) {
         Objcmp cmp;
         auto bnd  = boundFn::invoke(space, c);
+        if (1) {
           auto reg = Registry<Space, Node, Bound, Enumerator>::gReg;
           auto best = reg->localBound.load();
           if (!cmp(bnd, best)) {
-                return ProcessNodeRet::Break;
+                return ProcessNodeRet::Prune;
           }
+        }
+      }
 
       if (1) {
         auto reg = Registry<Space, Node, Bound, Enumerator>::gReg;

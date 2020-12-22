@@ -38,8 +38,7 @@ struct Seq {
     hpx::cout << "Optimisation: " << std::boolalpha << isBnB << "\n";
     hpx::cout << "Decision: " << std::boolalpha << isDecision << "\n";
     hpx::cout << "DepthBounded: " << std::boolalpha << isDepthBounded << "\n";
-      hpx::cout << "Using Bounding: true\n";
-      hpx::cout << "PruneLevel Optimisation: " << std::boolalpha << pruneLevel << "\n";
+      hpx::cout << "Using Bounding: false\n";
     hpx::cout << hpx::flush;
   }
 
@@ -51,24 +50,29 @@ struct Seq {
                      Enumerator & acc) {
     Generator newCands = Generator(space, n);
 
+    if (1) {
+        acc.accumulate(n);
+    }
+
+    if (1) {
+        if (childDepth == params.maxDepth) {
+          return false;
+        }
+    }
+
     for (auto i = 0; i < newCands.numChildren; ++i) {
       auto c = newCands.next();
 
       // Do we support bounding?
+      if (1) {
           Objcmp cmp;
           auto bnd  = boundFn::invoke(space, c);
+          if (1) {
             auto best = std::get<1>(incumbent);
             if (!cmp(bnd,best)) {
-                  break;
+              continue;
             }
-
-      if (1) {
-        Objcmp cmp;
-        if (cmp(c.getObj(), std::get<1>(incumbent))) {
-          std::get<0>(incumbent) = c;
-          std::get<1>(incumbent) = c.getObj();
-            hpx::cout << (boost::format("New Incumbent: %1%\n") % c.getObj()) << hpx::flush;
-        }
+          }
       }
 
       auto found = expand(space, c, params, incumbent, childDepth + 1, acc);
