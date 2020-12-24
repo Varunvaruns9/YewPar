@@ -38,7 +38,8 @@ struct Seq {
     hpx::cout << "Optimisation: " << std::boolalpha << isBnB << "\n";
     hpx::cout << "Decision: " << std::boolalpha << isDecision << "\n";
     hpx::cout << "DepthBounded: " << std::boolalpha << isDepthBounded << "\n";
-      hpx::cout << "Using Bounding: false\n";
+      hpx::cout << "Using Bounding: true\n";
+      hpx::cout << "PruneLevel Optimisation: " << std::boolalpha << pruneLevel << "\n";
     hpx::cout << hpx::flush;
   }
 
